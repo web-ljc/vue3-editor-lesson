@@ -1,5 +1,7 @@
 import './public-path'
 import { createApp } from 'vue'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
 import App from './App.vue'
 import routes from './router'
 
@@ -10,6 +12,7 @@ function render(props = {}) {
   const { container } = props;
   instance = createApp(App)
   instance.use(routes)
+  instance.use(ElementPlus)
   instance.mount(container ? container.querySelector('#app') : '#app')
 }
 

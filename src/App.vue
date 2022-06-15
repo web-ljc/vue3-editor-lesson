@@ -1,11 +1,13 @@
 <template>
-  <MyEditor :data="state" />
+  <div class="app">
+    <MyEditor v-model="state" />
+  </div>
 </template>
 
 <script lang="ts">
-import { ref, defineComponent } from 'vue';
-import MyEditor from './packages/myEditor.jsx'
-
+import { defineComponent, provide, ref } from 'vue';
+import MyEditor from './packages/myEditor'
+import { registerConfig as config } from './utils/editorConfig'
 
 export default defineComponent({
   name: 'App',
@@ -15,7 +17,8 @@ export default defineComponent({
   setup() {
     const data = require('./components/data.json')
     const state = ref(data)
-    console.log(state, 2);
+
+    provide('config', config) // 跨层级提供物料数据
     
     return {
       state
@@ -23,3 +26,12 @@ export default defineComponent({
   }
 });
 </script>
+<style scoped>
+.app {
+  position: fixed;
+  top: 63px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+}
+</style>
