@@ -1,5 +1,5 @@
 import { computed, defineComponent, inject, ref } from "vue";
-import { Back, RefreshLeft } from '@element-plus/icons-vue'
+import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import './editor.less'
 import EditorBlock from "./editorBlock";
 import deepcopy from "deepcopy";
@@ -47,10 +47,10 @@ export default defineComponent({
     const { mousedown, markLine } = useBlockDragger(focusData, lastSelectBlock, data)
 
     // 3.撤销&重做
-    const {commands} = useCommand()
+    const {commands} = useCommand(data)
     const buttons = [
-      { label: '撤销', icon: <Back />, handler: () => commands.undo() },
-      { label: '重做', icon: <RefreshLeft />, handler: () => commands.redo() }
+      { label: '撤销', icon: <DArrowLeft />, handler: () => commands.undo() },
+      { label: '还原', icon: <DArrowRight />, handler: () => commands.redo() }
     ]
 
     return () => <div class="editor">

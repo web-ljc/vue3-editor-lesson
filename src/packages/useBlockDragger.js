@@ -1,72 +1,27 @@
 import { reactive } from "vue"
+import { events } from "./events"
 
 export default function (focusData, lastSelectBlock, data) {
   // 位置
-  let dragStart = {
+  let dragState = {
     startX: 0,
-    startY: 0
+    startY: 0,
+    dragging: false // 默认不是拖拽
   }
   let markLine = reactive({
     x: null,
     y: null
   })
-  // 移动鼠标
-  const mousemove = (e) => {
-    let { pageX: moveX, pageY: moveY } = e
-
-    // 计算当前元素最新的left和top去线里面找，找到显示线
-    // 鼠标移动后 - 鼠标移动前 + left
-    let left = moveX - dragStart.startX + dragStart.startLeft
-    let top = moveY - dragStart.startY + dragStart.startTop
-
-    // 先计算横线 距离参照物元素还有5px的时候，显示
-    let y = null, x = null
-    for (let i = 0; i < dragStart.lines.y.length; i++) {
-      const { top: t, showTop: s } = dragStart.lines.y[i]
-      if (Math.abs(t - top) < 5) { // 小于5说明接近了
-        y = s // 线要实现的位置
-        moveY = dragStart.startY - dragStart.startTop + t // 容器距离顶部的距离 + 目标的高度 就是最新的moveY
-        // 实现快速和这个元素贴在一起
-        break // 找到一根线后就跳出循环
-      }
-    }
-    for (let i = 0; i < dragStart.lines.x.length; i++) {
-      const { left: l, showLeft: s } = dragStart.lines.x[i]
-      if (Math.abs(l - left) < 5) { // 小于5说明接近了
-        x = s // 线要实现的位置
-        moveX = dragStart.startX - dragStart.startLeft + l // 容器距离顶部的距离 + 目标的高度 就是最新的moveY
-        // 实现快速和这个元素贴在一起
-        break // 找到一根线后就跳出循环
-      }
-    }
-    
-    markLine.x = x // markLine 是一个响应式数据 x, y更新会导致视图更新
-    markLine.y = y
-
-    let durX = moveX - dragStart.startX // 之前和之后的距离
-    let durY = moveY - dragStart.startY
-    focusData.value.focus.forEach((block, idx) => {
-      block.top = dragStart.startPos[idx].top + durY
-      block.left = dragStart.startPos[idx].left + durX
-    })
-  }
-  // 松开鼠标
-  const mouseup = () => {
-    document.removeEventListener('mousemove', mousemove)
-    document.removeEventListener('mouseup', mouseup)
-    markLine.x = null
-    markLine.y = null
-  }
   // 按下鼠标，获取初始值和选中的位置
   const mousedown = (e) => {
-    console.log(lastSelectBlock);
     const { width: BWidth, height: BHeight } = lastSelectBlock.value
 
-    dragStart = {
+    dragState = {
       startX: e.pageX,
       startY: e.pageY, // 记录每一选中的位置
       startLeft: lastSelectBlock.value.left, // b点拖拽前的位置 left 和 top
       startTop: lastSelectBlock.value.top,
+      dragging: false,
       startPos: focusData.value.focus.map(({ top, left }) => ({ top, left })),
       lines: (() => {
         const { unfocused } = focusData.value // 获取其他没有选中的以及它们的位置坐辅助线
@@ -100,6 +55,60 @@ export default function (focusData, lastSelectBlock, data) {
     }
     document.addEventListener('mousemove', mousemove)
     document.addEventListener('mouseup', mouseup)
+  }
+  // 移动鼠标
+  const mousemove = (e) => {
+    let { pageX: moveX, pageY: moveY } = e
+    if(!dragState.dragging) {
+      dragState.dragging = true
+      events.emit('start') // 触发事件就会记住拖拽前的位置
+    }
+
+    // 计算当前元素最新的left和top去线里面找，找到显示线
+    // 鼠标移动后 - 鼠标移动前 + left
+    let left = moveX - dragState.startX + dragState.startLeft
+    let top = moveY - dragState.startY + dragState.startTop
+
+    // 先计算横线 距离参照物元素还有5px的时候，显示
+    let y = null, x = null
+    for (let i = 0; i < dragState.lines.y.length; i++) {
+      const { top: t, showTop: s } = dragState.lines.y[i]
+      if (Math.abs(t - top) < 5) { // 小于5说明接近了
+        y = s // 线要实现的位置
+        moveY = dragState.startY - dragState.startTop + t // 容器距离顶部的距离 + 目标的高度 就是最新的moveY
+        // 实现快速和这个元素贴在一起
+        break // 找到一根线后就跳出循环
+      }
+    }
+    for (let i = 0; i < dragState.lines.x.length; i++) {
+      const { left: l, showLeft: s } = dragState.lines.x[i]
+      if (Math.abs(l - left) < 5) { // 小于5说明接近了
+        x = s // 线要实现的位置
+        moveX = dragState.startX - dragState.startLeft + l // 容器距离顶部的距离 + 目标的高度 就是最新的moveY
+        // 实现快速和这个元素贴在一起
+        break // 找到一根线后就跳出循环
+      }
+    }
+
+    markLine.x = x // markLine 是一个响应式数据 x, y更新会导致视图更新
+    markLine.y = y
+
+    let durX = moveX - dragState.startX // 之前和之后的距离
+    let durY = moveY - dragState.startY
+    focusData.value.focus.forEach((block, idx) => {
+      block.top = dragState.startPos[idx].top + durY
+      block.left = dragState.startPos[idx].left + durX
+    })
+  }
+  // 松开鼠标
+  const mouseup = () => {
+    document.removeEventListener('mousemove', mousemove)
+    document.removeEventListener('mouseup', mouseup)
+    markLine.x = null
+    markLine.y = null
+    if(dragState.dragging) { // 如果只是点击就不会触发
+      events.emit('end')
+    }
   }
 
   return {
