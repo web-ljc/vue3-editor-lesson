@@ -1,5 +1,5 @@
 import { computed, defineComponent, inject, ref } from "vue";
-import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
+import { DArrowLeft, DArrowRight, Download, Upload } from '@element-plus/icons-vue'
 import './editor.less'
 import EditorBlock from "./editorBlock";
 import deepcopy from "deepcopy";
@@ -7,6 +7,7 @@ import useMenuDragger from './useMenuDragger'
 import useFocus from './useFocus'
 import useBlockDragger from './useBlockDragger'
 import useCommand from "./useCommand"
+import { $dialog } from "@/components/myDiaglog";
 
 export default defineComponent({
   props: {
@@ -50,7 +51,25 @@ export default defineComponent({
     const {commands} = useCommand(data)
     const buttons = [
       { label: '撤销', icon: <DArrowLeft />, handler: () => commands.undo() },
-      { label: '还原', icon: <DArrowRight />, handler: () => commands.redo() }
+      { label: '还原', icon: <DArrowRight />, handler: () => commands.redo() },
+      { label: '导出', icon: <Upload />, handler: () => {
+        $dialog({
+          title: '导出json使用',
+          content: JSON.stringify(data.value),
+          footer: true
+        })
+      }},
+      {label: '导入', icon: <Download />, handler: () => {
+        $dialog({
+          title: '导入json使用',
+          content: '',
+          footer: true,
+          onConfirm(text) {
+            // data.value = JSON.parse(text)
+            commands.updateContainer(JSON.parse(text))
+          }
+        })
+      }}
     ]
 
     return () => <div class="editor">

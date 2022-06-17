@@ -13,8 +13,8 @@ export default function (data) {
 
   const registry = (command) => {
     state.commandArray.push(command)
-    state.commands[command.name] = () => { // 命令对应执行函数
-      const { redo, undo } = command.execute()
+    state.commands[command.name] = (...args) => { // 命令对应执行函数
+      const { redo, undo } = command.execute(...args)
       redo()
       if (!command.pushQueue) return // 不需要放到队列直接跳过
       let { queue, current } = state
@@ -91,6 +91,26 @@ export default function (data) {
         },
         undo() { // 前一步
           data.value = { ...data.value, blocks: before }
+        }
+      }
+    }
+  })
+  // 带有历史记录模式
+  registry({
+    name: 'updateContainer',
+    pushQueue: true,
+    execute(newValue) {
+      let state = {
+        before: data.value,
+        after: newValue
+      }
+
+      return {
+        redo: () => {
+          data.value = state.after
+        },
+        undo: () => {
+          data.value = state.before
         }
       }
     }
