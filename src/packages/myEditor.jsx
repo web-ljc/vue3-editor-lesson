@@ -1,5 +1,5 @@
 import { computed, defineComponent, inject, ref } from "vue";
-import { DArrowLeft, DArrowRight, Download, Upload } from '@element-plus/icons-vue'
+import { DArrowLeft, DArrowRight, Download, Upload, SortDown, SortUp, Delete, View, Hide } from '@element-plus/icons-vue'
 import './editor.less'
 import EditorBlock from "./editorBlock";
 import deepcopy from "deepcopy";
@@ -15,6 +15,9 @@ export default defineComponent({
   },
   emits: ['update:modelValue'],
   setup(props, ctx) {
+    // 预览的时候内容不能再操作，可以点击输入内容方便看效果
+    const previewRef = ref(false)
+
     // 获取入参
     const data = computed({
       get() {
@@ -40,7 +43,7 @@ export default defineComponent({
     const { dragstart, dragend } = useMenuDragger(containerRef, data)
 
     // 2.实现获取焦点，选中后可以直接拖拽
-    const { blockMousedown, containerMousedown, focusData, lastSelectBlock } = useFocus(data, (e) => {
+    const { blockMousedown, containerMousedown, focusData, lastSelectBlock, clearBlockFocus } = useFocus(data, previewRef, (e) => {
       // 获取焦点后进行拖拽
       mousedown(e)
     })
@@ -48,28 +51,43 @@ export default defineComponent({
     const { mousedown, markLine } = useBlockDragger(focusData, lastSelectBlock, data)
 
     // 3.撤销&重做
-    const {commands} = useCommand(data)
+    const { commands } = useCommand(data, focusData)
     const buttons = [
       { label: '撤销', icon: <DArrowLeft />, handler: () => commands.undo() },
       { label: '还原', icon: <DArrowRight />, handler: () => commands.redo() },
-      { label: '导出', icon: <Upload />, handler: () => {
-        $dialog({
-          title: '导出json使用',
-          content: JSON.stringify(data.value),
-          footer: true
-        })
-      }},
-      {label: '导入', icon: <Download />, handler: () => {
-        $dialog({
-          title: '导入json使用',
-          content: '',
-          footer: true,
-          onConfirm(text) {
-            // data.value = JSON.parse(text)
-            commands.updateContainer(JSON.parse(text))
-          }
-        })
-      }}
+      {
+        label: '导出', icon: <Upload />, handler: () => {
+          $dialog({
+            title: '导出json使用',
+            content: JSON.stringify(data.value),
+            footer: true
+          })
+        }
+      },
+      {
+        label: '导入', icon: <Download />, handler: () => {
+          $dialog({
+            title: '导入json使用',
+            content: '',
+            footer: true,
+            onConfirm(text) {
+              // data.value = JSON.parse(text)
+              commands.updateContainer(JSON.parse(text))
+            }
+          })
+        }
+      },
+      { label: '置顶', icon: <SortUp />, handler: () => commands.placeTop() },
+      { label: '置底', icon: <SortDown />, handler: () => commands.placeBottom() },
+      { label: '删除', icon: <Delete />, handler: () => commands.delete() },
+      {
+        label: () => previewRef.value ? '编辑' : '预览',
+        icon: () => previewRef.value ? <Hide /> : <View />,
+        handler: () => {
+          previewRef.value = !previewRef.value
+          clearBlockFocus()
+        }
+      }
     ]
 
     return () => <div class="editor">
@@ -89,11 +107,15 @@ export default defineComponent({
       </div>
       <div class="editor-center">
         <div class="editor-top">
-          {buttons.map((btn, index) => {
-            return  <el-button type="primary" icon={btn.icon}  key={index} onClick={btn.handler}>
-              <span>{btn.label}</span>
-            </el-button>
-          })}
+          <el-button-group>
+            {buttons.map((btn, index) => {
+              const label = typeof btn.label === 'function' ? btn.label() : btn.label
+              const icon = typeof btn.icon === 'function' ? btn.icon() : btn.icon
+              return <el-button type="primary" icon={icon} key={index} onClick={btn.handler}>
+                <span>{label}</span>
+              </el-button>
+            })}
+          </el-button-group>
         </div>
         <div class="editor-container">
           {/* 负责产生滚动条 */}
@@ -107,7 +129,10 @@ export default defineComponent({
             >
               {data.value.blocks.map((block, index) =>
                 <EditorBlock
-                  class={block.focus ? 'editor-block-focus' : ''}
+                  class={[
+                    block.focus ? 'editor-block-focus' : '',
+                    previewRef.value ? 'editor-block-preview' : ''
+                  ]}
                   v-model:block={block}
                   onMousedown={(e) => blockMousedown(e, block, index)}
                 />

@@ -2,7 +2,7 @@ import deepcopy from "deepcopy"
 import { onUnmounted } from "vue"
 import { events } from "./events"
 
-export default function (data) {
+export default function (data, focusData) {
   const state = { // 前进后退需要指针
     current: -1, // 前进后退的索引值
     queue: [], // 存放所有的操作指令
@@ -111,6 +111,83 @@ export default function (data) {
         },
         undo: () => {
           data.value = state.before
+        }
+      }
+    }
+  })
+
+  registry({ // 置顶操作
+    name: 'placeTop',
+    pushQueue: true,
+    execute() {
+      let before = deepcopy(data.value.blocks)
+      let after = (() => { // 置顶就是在所有blocks中找到最大的
+        let {focus, unfocused} = focusData.value
+        // 遍历未选中的最大index值
+        let maxZIndex = unfocused.reduce((prev, block) => {
+          return Math.max(prev, block.zIndex)
+        }, -Infinity)
+        // 让当前选中比最大+1
+        focus.forEach(block => block.zIndex = maxZIndex + 1)
+        return data.value.blocks
+      })()
+      return {
+        undo: () => {
+          // blocks 前后一致则不更新
+          data.value = {...data.value, blocks: before}
+        },
+        redo: () => {
+          data.value = {...data.value, blocks: after}
+        }
+      }
+    }
+  })
+  registry({ // 置底操作
+    name: 'placeBottom',
+    pushQueue: true,
+    execute() {
+      let before = deepcopy(data.value.blocks)
+      let after = (() => { // 置顶就是在所有blocks中找到最大的
+        let {focus, unfocused} = focusData.value
+        // 遍历未选中的最大index值
+        let minZIndex = unfocused.reduce((prev, block) => {
+          return Math.min(prev, block.zIndex)
+        }, Infinity) - 1
+        // 不能直接减1 因为index不能出现负值 负值久看不到组件
+        if(minZIndex < 0) { // 如果是负值，让每选中的向上， 自己变成0
+          const dur = Math.abs(minZIndex)
+          minZIndex = 0
+          unfocused.forEach(block => block.zIndex += dur)
+        }
+        focus.forEach(block => block.zIndex = minZIndex) // 控制选中的值
+        return data.value.blocks
+      })()
+      return {
+        undo: () => {
+          // blocks 前后一致则不更新
+          data.value = {...data.value, blocks: before}
+        },
+        redo: () => {
+          data.value = {...data.value, blocks: after}
+        }
+      }
+    }
+  })
+  registry({ // 删除操作
+    name: 'delete',
+    pushQueue: true,
+    execute() {
+      let state = {
+        before: deepcopy(data.value.blocks), // 当前值
+        after: focusData.value.unfocused // 选中的都删除，留下未选中的
+      }
+      return {
+        undo: () => {
+          // blocks 前后一致则不更新
+          data.value = {...data.value, blocks: state.before}
+        },
+        redo: () => {
+          data.value = {...data.value, blocks: state.after}
         }
       }
     }

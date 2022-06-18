@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 
-export default function (data, callback) {
+export default function (data, previewRef, callback) {
   const selectIndex = ref(-1) // 表示任何一个没选中
 
   // 最后选择的组件
@@ -19,10 +19,10 @@ export default function (data, callback) {
   // 置空focus
   const clearBlockFocus = () => {
     data.value.blocks.forEach(block => block.focus = false)
-    selectIndex.value = -1
   }
   // 选中事件
   const blockMousedown = (e, block, index) => {
+    if(previewRef.value) return
     // 阻止默认事件
     e.preventDefault()
     e.stopPropagation()
@@ -44,13 +44,15 @@ export default function (data, callback) {
     callback(e)
   }
   const containerMousedown = () => {
-    // 点击容器让选中失去焦点
-    clearBlockFocus()
+    if(previewRef.value) return
+    clearBlockFocus() // 点击容器让选中失去焦点
+    selectIndex.value = -1
   }
 
   return {
     blockMousedown,
     containerMousedown,
+    clearBlockFocus,
     focusData,
     lastSelectBlock
   }
