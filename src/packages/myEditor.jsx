@@ -1,5 +1,5 @@
 import { computed, defineComponent, inject, ref } from "vue";
-import { DArrowLeft, DArrowRight, Download, Upload, SortDown, SortUp, Delete, View, Hide } from '@element-plus/icons-vue'
+import { DArrowLeft, DArrowRight, Download, Upload, SortDown, SortUp, Delete, View, Hide, CloseBold } from '@element-plus/icons-vue'
 import './editor.less'
 import EditorBlock from "./editorBlock";
 import deepcopy from "deepcopy";
@@ -7,7 +7,8 @@ import useMenuDragger from './useMenuDragger'
 import useFocus from './useFocus'
 import useBlockDragger from './useBlockDragger'
 import useCommand from "./useCommand"
-import { $dialog } from "@/components/myDiaglog";
+import { $dialog } from "@/components/myDiaglog"
+import { $dropdown, DropdownItem } from "@/components/myDropdown"
 
 export default defineComponent({
   props: {
@@ -17,6 +18,7 @@ export default defineComponent({
   setup(props, ctx) {
     // 预览的时候内容不能再操作，可以点击输入内容方便看效果
     const previewRef = ref(false)
+    const editorRef = ref(true)
 
     // 获取入参
     const data = computed({
@@ -87,10 +89,57 @@ export default defineComponent({
           previewRef.value = !previewRef.value
           clearBlockFocus()
         }
-      }
+      },
+      { label: '关闭', icon: <CloseBold />, handler: () => {
+        editorRef.value = false
+        clearBlockFocus()
+      } },
     ]
 
-    return () => <div class="editor">
+    const onContextMenuBlock = (e, block) => {
+      e.preventDefault()
+      $dropdown({
+        el: e.target, // 以哪个元素为准产生一个dropdown
+        content: () => {
+          return <>
+            <DropdownItem label="删除" icon={<Delete style="width: 1rem" />} onClick={() => commands.delete()} />
+            <DropdownItem label="置顶" icon={<SortUp style="width: 1rem" />} onClick={() => commands.placeTop()} />
+            <DropdownItem label="置底" icon={<SortDown style="width: 1rem" />} onClick={() => commands.placeBottom()} />
+            <DropdownItem label="查看" icon={<View style="width: 1rem" />} onClick={() => {
+              $dialog({
+                title: '查看节点数据',
+                content: JSON.stringify(block)
+              })
+            }} />
+            <DropdownItem label="导入" icon={<Download style="width: 1rem" />} onClick={() => {
+              $dialog({
+                title: '导入节点数据',
+                content: '',
+                footer: true,
+                onConfirm(text) {
+                  commands.updateBlock(JSON.parse(text), block)
+                }
+              })
+            }} />
+          </>
+        }
+      })
+    }
+
+    return () => !editorRef.value ? <>
+      <div
+        class="editor-container-canvas_content2"
+        style={containerStyles.value}
+      >
+        {data.value.blocks.map((block) =>
+          <EditorBlock
+            class={'editor-block-preview'}
+            v-model:block={block}
+          />
+        )}
+      </div>
+      <div><el-button type="primary" onClick={() => editorRef.value = true}>继续编辑</el-button></div>
+    </> : <div class="editor">
       <div class="editor-left">
         {/* 根据注册列表 渲染对应的内容。 可实现H5的拖拽 */}
         {config.componentList.map((component) => (
@@ -135,6 +184,7 @@ export default defineComponent({
                   ]}
                   v-model:block={block}
                   onMousedown={(e) => blockMousedown(e, block, index)}
+                  onContextmenu={(e) => onContextMenuBlock(e, block)}
                 />
               )}
               {markLine.x !== null && <div class="line-x" style={{ left: markLine.x + 'px' }}></div>}

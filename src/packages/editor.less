@@ -1,4 +1,4 @@
-
+// 滚动条优化
 ::-webkit-scrollbar {
   width: 4px;
   height: 1px;
@@ -18,7 +18,7 @@
   -webkit-box-shadow: none;
 }
 
-
+// 编辑区布局
 .editor {
   display: flex;
   width: 100%;
@@ -122,7 +122,7 @@
   }
 }
 
-// 移动left
+// 移动虚线展示
 .line-x {
   position: absolute;
   top: 0;
@@ -136,3 +136,27 @@
   border-top: 1px dashed red;
 }
 
+// 全局查看
+.editor-container-canvas_content2 {
+  margin: 0;
+  background-color: cadetblue;
+  position: relative;
+}
+
+// dropdown
+.dropdown {
+  display: none;
+  position: absolute;
+  background-color: #fff;
+  box-shadow: 2px 2px #ccc;
+}
+.dropdown-isShow {
+  display: block;
+}
+.dropdown-item {
+  line-height: 30px;
+  width: 100px;
+  border-bottom: 1px solid #ccc;
+  text-align: center;
+  cursor: pointer;
+}

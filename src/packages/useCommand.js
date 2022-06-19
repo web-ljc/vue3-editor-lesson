@@ -122,7 +122,7 @@ export default function (data, focusData) {
     execute() {
       let before = deepcopy(data.value.blocks)
       let after = (() => { // 置顶就是在所有blocks中找到最大的
-        let {focus, unfocused} = focusData.value
+        let { focus, unfocused } = focusData.value
         // 遍历未选中的最大index值
         let maxZIndex = unfocused.reduce((prev, block) => {
           return Math.max(prev, block.zIndex)
@@ -134,10 +134,10 @@ export default function (data, focusData) {
       return {
         undo: () => {
           // blocks 前后一致则不更新
-          data.value = {...data.value, blocks: before}
+          data.value = { ...data.value, blocks: before }
         },
         redo: () => {
-          data.value = {...data.value, blocks: after}
+          data.value = { ...data.value, blocks: after }
         }
       }
     }
@@ -148,13 +148,13 @@ export default function (data, focusData) {
     execute() {
       let before = deepcopy(data.value.blocks)
       let after = (() => { // 置顶就是在所有blocks中找到最大的
-        let {focus, unfocused} = focusData.value
+        let { focus, unfocused } = focusData.value
         // 遍历未选中的最大index值
         let minZIndex = unfocused.reduce((prev, block) => {
           return Math.min(prev, block.zIndex)
         }, Infinity) - 1
         // 不能直接减1 因为index不能出现负值 负值久看不到组件
-        if(minZIndex < 0) { // 如果是负值，让每选中的向上， 自己变成0
+        if (minZIndex < 0) { // 如果是负值，让每选中的向上， 自己变成0
           const dur = Math.abs(minZIndex)
           minZIndex = 0
           unfocused.forEach(block => block.zIndex += dur)
@@ -165,10 +165,10 @@ export default function (data, focusData) {
       return {
         undo: () => {
           // blocks 前后一致则不更新
-          data.value = {...data.value, blocks: before}
+          data.value = { ...data.value, blocks: before }
         },
         redo: () => {
-          data.value = {...data.value, blocks: after}
+          data.value = { ...data.value, blocks: after }
         }
       }
     }
@@ -184,10 +184,33 @@ export default function (data, focusData) {
       return {
         undo: () => {
           // blocks 前后一致则不更新
-          data.value = {...data.value, blocks: state.before}
+          data.value = { ...data.value, blocks: state.before }
         },
         redo: () => {
-          data.value = {...data.value, blocks: state.after}
+          data.value = { ...data.value, blocks: state.after }
+        }
+      }
+    }
+  })
+  registry({ // 更新某一个
+    name: 'updateBlock',
+    pushQueue: true,
+    execute(newBlock, oldBlock) {
+      let state = {
+        before: data.value.blocks,
+        after: (() => {
+          let blocks = [...data.value.blocks] // 拷贝一份用于新block
+          const index = data.value.blocks.indexOf(oldBlock) // 找到老的位置
+          if (index > -1) blocks.splice(index, 1, newBlock)
+          return blocks
+        })()
+      }
+      return {
+        redo: () => {
+          data.value = { ...data.value, blocks: state.after }
+        },
+        undo: () => {
+          data.value = { ...data.value, blocks: state.before }
         }
       }
     }
