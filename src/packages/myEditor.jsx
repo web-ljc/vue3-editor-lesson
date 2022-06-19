@@ -1,8 +1,9 @@
 import { computed, defineComponent, inject, ref } from "vue";
 import { DArrowLeft, DArrowRight, Download, Upload, SortDown, SortUp, Delete, View, Hide, CloseBold } from '@element-plus/icons-vue'
 import './editor.less'
-import EditorBlock from "./editorBlock";
-import deepcopy from "deepcopy";
+import EditorBlock from "./editorBlock"
+import EditorOperator from './editorOperator'
+import deepcopy from "deepcopy"
 import useMenuDragger from './useMenuDragger'
 import useFocus from './useFocus'
 import useBlockDragger from './useBlockDragger'
@@ -193,7 +194,9 @@ export default defineComponent({
           </div>
         </div>
       </div>
-      <div class="editor-right">属性控制栏目</div>
+      <div class="editor-right">
+        <EditorOperator block={lastSelectBlock.value} data={data.value} />
+      </div>
     </div>
   }
 })
