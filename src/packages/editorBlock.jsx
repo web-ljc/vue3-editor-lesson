@@ -37,7 +37,9 @@ export default defineComponent({
       // 获取对应的物料信息
       const component = config.componentMap[blockData.value.key]
       // 获取渲染方法
-      const RnderComponent = component.render()
+      const RnderComponent = component.render({
+        props: props.block.props
+      })
       
       return (
         <div class="editor-block" style={blockStyles.value} ref={blockRef}>

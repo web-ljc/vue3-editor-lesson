@@ -195,7 +195,12 @@ export default defineComponent({
         </div>
       </div>
       <div class="editor-right">
-        <EditorOperator block={lastSelectBlock.value} data={data.value} />
+        <EditorOperator
+          block={lastSelectBlock.value}
+          data={data.value}
+          updateContainer={commands.updateContainer}
+          updateBlock={commands.updateBlock}
+        />
       </div>
     </div>
   }

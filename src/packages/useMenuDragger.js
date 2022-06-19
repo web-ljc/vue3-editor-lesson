@@ -21,7 +21,8 @@ export default function (containerRef, data) {
         left: e.offsetX,
         zIndex: 1,
         key: currentComponent.key,
-        alginCenter: true
+        alginCenter: true, // 居中
+        props: {}
       }
     ]}
     currentComponent = null
