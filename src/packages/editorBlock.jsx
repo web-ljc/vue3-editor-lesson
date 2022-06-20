@@ -1,4 +1,5 @@
 import { ref, computed, defineComponent, inject, onMounted } from "vue";
+import BlockResize from "./blockResize";
 
 export default defineComponent({
   props: {
@@ -47,6 +48,7 @@ export default defineComponent({
       const component = config.componentMap[blockData.value.key]
       // 获取渲染方法
       const RnderComponent = component.render({
+        size: props.block.hasResize ? {width: blockData.value.width, height: blockData.value.height} : {},
         props: blockData.value.props,
         // model: props.block.model > {default:'username'} => {modelValue: FormData.username, 'onUpdate:modelValue':v => FormData.username = v}
         model: Object.keys(component.model || {}).reduce((prev, modelName) => {
@@ -58,12 +60,15 @@ export default defineComponent({
           return prev
         }, {})
       })
-
-      return (
-        <div class="editor-block" style={blockStyles.value} ref={blockRef}>
-          {RnderComponent}
-        </div>
-      )
+      const { width, height } = component.resize || {}
+      return <div class="editor-block" style={blockStyles.value} ref={blockRef}>
+        {RnderComponent}
+        {/* 传递block的目的是为了修改当前block的宽高， component中存放了是修改高度还是宽度 */}
+        {blockData.value.focus && (width || height) && <BlockResize 
+          block={blockData.value}
+          component={component}
+        />}
+      </div>
     }
   }
 })

@@ -3,13 +3,6 @@
 
 import MyRange from "@/components/myRange"
 
-// interface IComponent {
-//   label: string
-//   preview: () => {}
-//   render: () => {}
-//   key: string
-// }
-
 function createEditorConfig() {
   const componentList = [] // 左侧物料显示内容
   const componentMap = {} // 显示区域匹配对应物料
@@ -50,8 +43,15 @@ registerConfig.register({
 
 registerConfig.register({
   label: '按钮',
+  resize: {
+    width: true,
+    height: true
+  },
   preview: () => <el-button>预览按钮</el-button>,
-  render: ({props}) => <el-button type={props.type} size={props.size}>
+  render: ({props, size}) => <el-button
+    style={{height: size.height+'px', width: size.width+'px'}}
+    type={props.type}
+    size={props.size}>
     { props.text || '渲染按钮' }
   </el-button>,
   key: 'button',
@@ -74,8 +74,11 @@ registerConfig.register({
 
 registerConfig.register({
   label: '输入框',
+  resize: {
+    width: true, // 更改输入框的横向大小
+  },
   preview: () => <el-input placeholder="预览输入框" />,
-  render: ({model}) => <el-input placeholder="渲染输入框" {...model.default} />,
+  render: ({model, size}) => <el-input placeholder="渲染输入框" {...model.default} style={{width: size.width+'px'}}/>,
   key: 'input',
   model: { // {default: 'username'}
     default: '绑定字段'
