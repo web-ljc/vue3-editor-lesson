@@ -1,6 +1,6 @@
 <template>
-  <div class="app">
-    <MyEditor v-model="state" />
+  <div>
+    <MyEditor v-model="state" :formData="formData" />
   </div>
 </template>
 
@@ -20,8 +20,14 @@ export default defineComponent({
 
     provide('config', config) // 跨层级提供物料数据
     
+    const formData = ref({
+      username: 'test',
+      password: 123
+    })
+
     return {
-      state
+      state,
+      formData
     }
   }
 });

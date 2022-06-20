@@ -13,7 +13,8 @@ import { $dropdown, DropdownItem } from "@/components/myDropdown"
 
 export default defineComponent({
   props: {
-    modelValue: { type: Object }
+    modelValue: { type: Object },
+    formData: {type: Object}
   },
   emits: ['update:modelValue'],
   setup(props, ctx) {
@@ -136,11 +137,13 @@ export default defineComponent({
           <EditorBlock
             class={'editor-block-preview'}
             v-model:block={block}
+            formData={props.formData}
           />
         )}
       </div>
-      <div><el-button type="primary" onClick={() => editorRef.value = true}>继续编辑</el-button></div>
-    </> : <div class="editor">
+      <el-button type="primary" onClick={() => editorRef.value = true}>继续编辑</el-button>
+      {JSON.stringify(props.formData)}
+    </> : <div class="app editor">
       <div class="editor-left">
         {/* 根据注册列表 渲染对应的内容。 可实现H5的拖拽 */}
         {config.componentList.map((component) => (
@@ -184,6 +187,7 @@ export default defineComponent({
                     previewRef.value ? 'editor-block-preview' : ''
                   ]}
                   v-model:block={block}
+                  formData={props.formData}
                   onMousedown={(e) => blockMousedown(e, block, index)}
                   onContextmenu={(e) => onContextMenuBlock(e, block)}
                 />

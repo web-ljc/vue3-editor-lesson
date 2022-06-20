@@ -22,7 +22,8 @@ export default function (containerRef, data) {
         zIndex: 1,
         key: currentComponent.key,
         alginCenter: true, // 居中
-        props: {}
+        props: {},
+        model: {}
       }
     ]}
     currentComponent = null
