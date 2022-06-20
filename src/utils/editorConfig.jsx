@@ -1,6 +1,8 @@
 // 列表区可以显示所有的物料
 // key对应的组件映射关系
 
+import MyRange from "@/components/myRange"
+
 // interface IComponent {
 //   label: string
 //   preview: () => {}
@@ -77,5 +79,24 @@ registerConfig.register({
   key: 'input',
   model: { // {default: 'username'}
     default: '绑定字段'
+  }
+})
+
+registerConfig.register({
+  label: '范围选择器',
+  preview: () => <MyRange placeholder="预览输入框" />,
+  render: ({model}) => {
+    console.log(model, 9);
+    return <MyRange {...{
+      start: model.start.modelValue, // @update:start
+      end: model.end.modelValue,
+      'onUpdate:start': model.start['onUpdate:modelValue'],
+      'onUpdate:end': model.end['onUpdate:modelValue'],
+    }}/>
+  },
+  key: 'range',
+  model: {
+    start: '开始范围字段',
+    end: '结束范围字段'
   }
 })

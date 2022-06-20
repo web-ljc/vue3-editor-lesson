@@ -50,7 +50,7 @@
         position: absolute;
         top: 0;
         left: 0;
-        width: 50px;
+        // width: 50px;
         padding: 4px;
         border-radius: 3px;
         font-size: 12px;
@@ -162,4 +162,19 @@
   border-bottom: 1px solid #ccc;
   text-align: center;
   cursor: pointer;
+}
+
+.range {
+  display: inline-flex;
+  width: 220px;
+  min-height: 30px;
+  align-items: center;
+  input {
+    flex: 1;
+    width: 100%;
+  }
+  span {
+    margin: 0 4px;
+    display: inline-flex;
+  }
 }
